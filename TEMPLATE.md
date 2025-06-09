@@ -1,107 +1,92 @@
 ---
-title: My Super Awesome Tutorial
-date: 1970-01-01
+title: Converting Sprites to C Arrays for Microcontroller Displays
+date: 2025-06-08
 authors:
-  - name: John Doe
-  - name: Mary Jane
+  - name: Max Gibson
 ---
 
-![relevant graphic or workshop logo](image/path)
+![16x16 PNG Sprite Converted to C Code](/mnt/data/b40f1f2e-1efe-4111-84e7-7ea7c5b6dd38.png)
 
 ## Introduction
-
-Write a short section on what the tutorial is aiming to accomplish.
-What is the motivation behind the tutorial?
-What do you want readers to gain from the tutorial?
+This tutorial walks you through the process of taking your custom-made pixel art sprites and converting them into C-style arrays that can be imported into Arduino projects—specifically for a Tamagotchi-inspired device. Whether you're building a retro display or a handheld digital pet, this guide will show you how to go from sprite sheet to embedded code.
 
 ### Learning Objectives
-
-- Bullet list of skills/concepts to be covered
-
-Any additional notes from the developers can be included here.
+- Understand how to create sprites using pixel art tools
+- Learn how to extract PNG data into C arrays
+- Format graphics for use in microcontroller environments (e.g., Arduino + ST7789)
+- Automate batch conversions with Python
 
 ### Background Information
+Sprites are small, static or animated images used to represent characters or objects in embedded displays or games. In low-resource environments (like Arduino projects), graphics are often stored as static arrays of byte data. This format allows the data to be rendered efficiently on an LCD or OLED display.
 
-Describe your topic here. What does it do? Why do you use it?
-Are there other similar things to use? What are the pros and cons?
-Explain important concepts that are necessary to understand.
-Include (and cite if needed) any visuals that will help the audience understand.
+You can create your own sprite PNGs using pixel art tools like **Aseprite**, or source them online.
+
+**Aseprite** is a paid software available on Steam. It provides a rich interface for pixel-based sprite design. The central canvas area is your design workspace, and the vertical toolbar on the right provides key tools for drawing, filling, erasing, and selecting. 
+
+![Aseprite Workspace](/mnt/data/f51e5c5c-b319-485e-8259-1c15040d41de.png)
+
+The display we used for this project is a 1.14" 135x240 full-view TFT IPS screen that runs over SPI using the ST7789 driver. It operates at 3.3V and is compatible with Arduino and ESP32.
+
+![ST7789 Display Module Used](/mnt/data/0a3f234c-243c-40d3-a354-17670f72c3c5.png)
 
 ## Getting Started
 
-For any software prerequisites, write a simple excerpt on each
-technology the participant will be expecting to download and install.
-Aim to demystify the technologies being used and explain any design
-decisions that were taken. Walk through the installation processes
-in detail. Be aware of any operating system differences.
-For hardware prerequisites, list all the necessary components that
-the participant will receive. A table showing component names and
-quantities should suffice. Link any reference sheets or guides that
-the participant may need.
-The following are stylistic examples of possible prerequisites,
-customize these for each workshop.
-
 ### Required Downloads and Installations
-
-List any required downloads and installations here.
-Make sure to include tutorials on how to install them.
-You can either make your own tutorials or include a link to them.
+- [Aseprite](https://www.aseprite.org/): For sprite design (paid)
+- Python 3.x: For image processing
+- `Pillow` library (Python Imaging Library fork): Install via `pip install pillow`
 
 ### Required Components
-
-List your required hardware components and the quantities here.
-
-| Component Name | Quanitity |
-| -------------- | --------- |
-|                |           |
-|                |           |
+| Component Name       | Quantity |
+|----------------------|----------|
+| ESP32 or Arduino     | 1        |
+| ST7789 Display       | 1        |
+| Breadboard + Wires   | 1 set    |
+| USB Cable            | 1        |
 
 ### Required Tools and Equipment
+- Computer (Mac, Windows, or Linux)
+- Aseprite software
+- Arduino IDE
 
-List any tools and equipment you need here.
-(Ex, computer, soldering station, etc.)
-
-## Part 01: Name
+## Part 01: Creating and Converting Sprites
 
 ### Introduction
-
-Briefly introduce what  you are teaching in this section.
+In this section, we cover how to create your sprite, then convert it into a format suitable for use in C/Arduino projects.
 
 ### Objective
-
-- List the learning objectives of this section
+- Create a sprite PNG using Aseprite
+- Convert PNGs into C arrays using Python
+- Store and access them in header files for microcontroller display
 
 ### Background Information
-
-Give a brief explanation of the technical skills learned/needed
-in this challenge. There is no need to go into detail as a
-separation document should be prepared to explain more in depth
-about the technical skills
+Sprites should be uniformly sized (e.g., 16x16 or 32x32 pixels) and saved as PNGs with a transparent background. These images are then processed into a byte array that represents the RGB values (often 565 format) needed by microcontroller display drivers.
 
 ### Components
-
-- List the components needed in this challenge
+- Aseprite (for sprite design)
+- Python script (for conversion)
 
 ### Instructional
+1. **Design Your Sprite**:
+   - Open Aseprite and create a new image (e.g., 16x16).
+   - Use the right-hand toolbar to draw with pencil, eraser, fill, and select tools.
+   - Export each frame or sprite as a `.png` file.
 
-Teach the contents of this section
+2. **Convert PNGs to C Arrays**:
+   - Use Python to loop through a folder of `.png` files and extract byte data.
+   - This script uses `Pillow` to read pixel values and format them into hex bytes.
 
-## Example
+![Python to C Array Conversion Code](/mnt/data/e0dc5b2e-3439-439b-be3d-3f6e290eb4cd.png)
 
-### Introduction
-
-Introduce the example that you are showing here.
-
-### Example
-
-Present the example here. Include visuals to help better understanding
-
-### Analysis
-
-Explain how the example used your tutorial topic. Give in-depth analysis of each part and show your understanding of the tutorial topic
-
-## Additional Resources
-
-### Useful links
-
-List any sources you used, documentation, helpful examples, similar projects etc.
+```python
+# Function to process all files in a folder
+def process_images_in_folder(folder_path, output_csv, req_h, req_w):
+    dims = req_h * req_w
+    with open(output_csv, 'w') as csvfile:
+        csvfile.write(f"const unsigned char idle[][{{dims}}] PROGMEM = {{\n")
+    for filename in os.listdir(folder_path):
+        if filename.endswith(".png"):
+            image_path = os.path.join(folder_path, filename)
+            read_image_and_save_to_csv(image_path, output_csv, req_h, req_w)
+    with open(output_csv, 'a') as csvfile:
+        csvfile.write("};")
